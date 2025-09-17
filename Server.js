@@ -10,18 +10,18 @@ const port = 3000;
 const db = new pg.Client({
   user: "postgres",
   host: "localhost",
-  database: "library",
+  database: "Library",
   password: "admin",
   port: 5432,
 });
 
-db.connect();
-
 app.use(cors());
 app.use(express.json());
 
+db.connect();
+
 //get request that pulls the
-app.get("/", async (req, res) => {
+app.get("/api/books", async (req, res) => {
   try {
     const result = await db.query("SELECT * FROM book ORDER BY id ASC");
     res.json(result.rows);
@@ -31,18 +31,15 @@ app.get("/", async (req, res) => {
 });
 
 //post request to add data to the the books library
-app.post("/", async (req, res) => {
-  const { title, author, rating, review, created_by, isbn, cover_url } =
-    req.body;
+app.post("/api/books", async (req, res) => {
+  const { title, author, rating, cover_url } = req.body;
 
   try {
-    const cover_url = `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`;
-
     const result = await db.query(
-      `INSERT INTO book (title, author, rating, review, cover_url, created_by)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO book (title, author, rating, cover_url)
+      VALUES ($1, $2, $3, $4)
       RETURNING *`,
-      [title, author, rating, review, cover_url, created_by]
+      [title, author, rating, cover_url ?? null]
     );
 
     res.status(201).json(result.rows[0]);

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import StarRating from "./StarRating";
-import { fetchCoverUrl } from "../../Routes/Api";
+import { createBook, fetchCoverUrl } from "../../Routes/Api";
+import { toast } from "react-hot-toast";
 
 function AddBook() {
   const [formData, setFormData] = useState({
@@ -12,32 +13,31 @@ function AddBook() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Form Submitted", formData);
 
-    const coverUrl = await fetchCoverUrl(
-      formData.titleInput,
-      formData.authorInput
-    );
-    const bookToPost = {
-      title: formData.titleInput,
-      author: formData.authorInput,
-      rating: formData.ratingInput,
-      review: formData.reviewInput,
-      cover_url: coverUrl,
-    };
+    try {
+      const coverUrl = await fetchCoverUrl(
+        formData.titleInput,
+        formData.authorInput
+      );
 
-    await fetch("/api/books", {
-      method: "POST",
-      body: JSON.stringify(bookToPost),
-      headers: { "Content-Type": "application/json" },
-    });
+      await createBook({
+        title: formData.titleInput,
+        author: formData.authorInput,
+        rating: formData.ratingInput,
+        cover_url: coverUrl ?? null,
+      });
 
-    setFormData({
-      titleInput: "",
-      authorInput: "",
-      ratingInput: 0,
-      reviewInput: "",
-    });
+      setFormData({
+        titleInput: "",
+        authorInput: "",
+        ratingInput: 0,
+        reviewInput: "",
+      });
+
+      toast.success("You added a book!");
+    } catch (error) {
+      toast.error("Could not add book");
+    }
   };
 
   const handleChange = (
