@@ -100,7 +100,7 @@ function AddBook() {
 
       <button
         type="submit"
-        className="bg-blue-500 text-white shadow px-4 py-2 p-4 rounded-lg mx-auto flex justify-center"
+        className="bg-blue-500 text-black shadow px-4 py-2 p-4 rounded-lg mx-auto flex justify-center"
         value="submit"
       >
         Add Book

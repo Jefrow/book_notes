@@ -41,6 +41,14 @@ function Navbar() {
               Add Book
             </Link>
           </li>
+          <li>
+            <Link
+              to="/LogIn"
+              className="hover:text-blue-600 transition cursor-pointer"
+            >
+              LogIn
+            </Link>
+          </li>
         </ul>
       </div>
     </nav>
