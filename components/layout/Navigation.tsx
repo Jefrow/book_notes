@@ -11,7 +11,7 @@ function Navbar() {
         <ul className="flex sm:justify-end sm:flex-grow gap-2 sm: gap-4 text-gray-700">
           <li>
             <Link
-              to="/"
+              to="/Library"
               className="hover:text-blue-600 transition cursor-pointer"
             >
               Library

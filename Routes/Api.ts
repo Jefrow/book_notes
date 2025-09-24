@@ -53,3 +53,9 @@ export async function createBook(book: {
   if (!res.ok) throw new Error("Failed to create book");
   return res.json();
 }
+
+export async function getReviews() {
+  const res = await fetch("/api/reviews");
+  if (!res.ok) throw new Error("Failed to fetch book reviews");
+  return res.json();
+}

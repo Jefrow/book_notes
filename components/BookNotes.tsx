@@ -4,6 +4,7 @@ import { useState } from "react";
 import Navbar from "./layout/Navigation";
 import AddBook from "./layout/AddBooks";
 import LogIn from "./layout/LogInForm";
+import Library from "./layout/Library";
 
 function BookNotes() {
   return (
@@ -12,7 +13,7 @@ function BookNotes() {
         <Navbar />
         <main className="p-4">
           <Routes>
-            <Route path="/" />
+            <Route path="/Library" element={<Library />} />
             <Route path="" />
             <Route path="" />
             <Route path="/AddBook" element={<AddBook />} />
