@@ -3,13 +3,13 @@ import { Link } from "react-router-dom";
 
 function Navbar() {
   return (
-    <nav className="bg-white shadow-md p-4">
-      <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <nav className="bg-white shadow-md p-4 fixed top-0 w-full z-100">
+      <div className="max-w-6xl w-full  mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold px-3 py-2 text-blue-600 mb-2 sm:mb-0">
           Book Notes
         </h1>
-        <ul className="flex sm:justify-end sm:flex-grow gap-2 sm: gap-4 text-gray-700">
-          <li>
+        <ul className="flex w-md sm:justify-end gap-2 sm: gap-4 text-gray-700">
+          <li className="p-2">
             <Link
               to="/Library"
               className="hover:text-blue-600 transition cursor-pointer"
@@ -17,7 +17,7 @@ function Navbar() {
               Library
             </Link>
           </li>
-          <li>
+          <li className="p-2">
             <Link
               to="/myBooks"
               className="hover:text-blue-600 transition cursor-pointer"
@@ -25,7 +25,7 @@ function Navbar() {
               My Books
             </Link>
           </li>
-          <li>
+          <li className="p-2">
             <Link
               to="/myReview"
               className="hover:text-blue-600 transition cursor-pointer"
@@ -33,7 +33,7 @@ function Navbar() {
               My Reviews
             </Link>
           </li>
-          <li>
+          <li className="p-2">
             <Link
               to="/addBook"
               className="hover:text-blue-600 transition cursor-pointer"
@@ -41,15 +41,15 @@ function Navbar() {
               Add Book
             </Link>
           </li>
-          <li>
-            <Link
-              to="/LogIn"
-              className="hover:text-blue-600 transition cursor-pointer"
-            >
-              LogIn
-            </Link>
-          </li>
         </ul>
+        <div className="px-4 py-2 bg-blue shadow-md rounded rounded bg-blue-500 text-white">
+          <Link
+            to="/LogIn"
+            className="hover:text-blue-600 transition cursor-pointer"
+          >
+            LogIn
+          </Link>
+        </div>
       </div>
     </nav>
   );

@@ -11,8 +11,9 @@ function BookNotes() {
     <>
       <Router>
         <Navbar />
-        <main className="p-4">
+        <main className="p-4 relative top-20">
           <Routes>
+            <Route path="/" element={<Library />} />
             <Route path="/Library" element={<Library />} />
             <Route path="" />
             <Route path="" />

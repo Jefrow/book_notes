@@ -20,7 +20,7 @@ app.use(express.json());
 
 db.connect();
 
-//get request that pulls the
+//get request that fetches the books from the book table.
 app.get("/api/books", async (req, res) => {
   try {
     const result = await db.query("SELECT * FROM book ORDER BY id ASC");
@@ -29,6 +29,8 @@ app.get("/api/books", async (req, res) => {
     console.log(error);
   }
 });
+
+//get request that fetches the reviews from the reviews table.
 
 //post request to add data to the the books library
 app.post("/api/books", async (req, res) => {

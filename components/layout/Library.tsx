@@ -20,9 +20,9 @@ function Library() {
 
   return (
     <>
-      <div className="flex flex-col  w-6x-1 h-full m-auto px-15">
-        <h1 className=" m-auto py-10">All Books</h1>
-        <div className="booksContainer grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+      <div className="flex flex-col  w-5/6 h-full m-auto px-15">
+        <h1 className=" m-auto py-10 ">All Books</h1>
+        <div className="booksContainer grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {books.map((book, index) => (
             <BookCards key={index} book={book} />
           ))}
