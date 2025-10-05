@@ -1,7 +1,7 @@
 import { useState } from "react";
 import StarRating from "./StarRating";
-import { createBook, fetchCoverUrl } from "../../Routes/Api";
 import { toast } from "react-hot-toast";
+import { saveBookData } from "../../Routes/helperFn";
 
 function AddBook() {
   const [formData, setFormData] = useState({
@@ -15,17 +15,7 @@ function AddBook() {
     e.preventDefault();
 
     try {
-      const coverUrl = await fetchCoverUrl(
-        formData.titleInput,
-        formData.authorInput
-      );
-
-      await createBook({
-        title: formData.titleInput,
-        author: formData.authorInput,
-        rating: formData.ratingInput,
-        cover_url: coverUrl ?? null,
-      });
+      await saveBookData(formData);
 
       setFormData({
         titleInput: "",
@@ -36,6 +26,7 @@ function AddBook() {
 
       toast.success("You added a book!");
     } catch (error) {
+      console.log(error);
       toast.error("Could not add book");
     }
   };

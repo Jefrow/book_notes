@@ -1,38 +1,19 @@
-import { MessageSquareQuote } from "lucide-react";
+import type { BookCardsData } from "../../src/types";
 
-interface bookProps {
-  book: {
-    title: string;
-    author: string;
-    rating: number;
-    cover_url: string;
-  };
-}
-
-function BookCards({ book }: bookProps) {
-  const maxStars = 5;
-  let rating = book.rating ?? 0;
-
+function BookCards({ book }: BookCardsData) {
   return (
-    <div className="bookCardContainer max-w-6x-l mx-auto px-8 py-10 flex-col gap-2 bg-white shadow rounded p-4 justify-center">
-      <div className="bookImage w-35 h-48 flex flex-shrink-0 content-center justify-center mx-auto">
+    <div className="bookCardContainer w-full mx-auto px-6 py-8 flex flex-col bg-white shadow rounded-lg p-4">
+      <div className="bookImage aspect-5/8 bg-transparent rounded">
         <img
-          className="w-100"
-          src={book.cover_url || "../src/assets/no-cover.png"}
+          className="h-full w-full object-fit"
+          src={book.book_cover_url || "../src/assets/no-cover.png"}
           alt="book image"
         />
       </div>
-      <p>{book.title}</p>
-      <p>{book.author}</p>
-      <div className="flex gap-1 mt-2">
-        {Array.from({ length: maxStars }, (_, i) => (
-          <span key={i} className="text-yellow-500 text-lg">
-            {i < rating ? "★" : "☆"}
-          </span>
-        ))}
+      <div className="flex  w-full flex-col gap-2 w-50 mx-auto py-2">
+        <p className="italic">{book.book_title}</p>
+        <p className="font-semibold">{book.author_name}</p>
       </div>
-
-      <div></div>
     </div>
   );
 }
