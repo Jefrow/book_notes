@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 function LogIn() {
   return (
     <form className="max-w-lg mx-auto mt-8 p-6 bg-white rounded-lg shadow space-y-5">
@@ -28,6 +30,15 @@ function LogIn() {
       >
         LogIn
       </button>
+      <p className="text-center">
+        Don't have an account?{" "}
+        <Link
+          className="text-blue-600 underline hover:text-blue-800"
+          to="/Register"
+        >
+          Register
+        </Link>
+      </p>
     </form>
   );
 }

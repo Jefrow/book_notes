@@ -33,3 +33,13 @@ export const saveBookData = async (
 
   return { newBookData };
 };
+
+export async function parseBody(res: Response) {
+  const text = await res.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}

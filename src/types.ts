@@ -7,10 +7,8 @@ export type Book = {
 };
 
 export type User = {
-  User_id: number;
-  userName: string;
-  User_email: string;
-  User_password: string;
+  user_email: string;
+  password: string;
 };
 
 export type BookFormData = {

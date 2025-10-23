@@ -1,4 +1,5 @@
-import type { BookData } from "../src/types";
+import type { BookData, User } from "../src/types";
+import { parseBody } from "./helperFn";
 
 async function fetchBookData(title: string, author: string) {
   const bookSearch = `https://openlibrary.org/search.json?title=${encodeURIComponent(
@@ -92,4 +93,72 @@ export async function getUserReviews(user_id: number) {
   const res = await fetch(`/api/users/${user_id}/reviews`);
   if (!res.ok) throw new Error("Failed to fetch book reviews");
   return res.json();
+}
+
+export async function fetchMe() {
+  const res = await fetch("/api/me", { credentials: "include" });
+  return res.json();
+}
+
+export async function logout() {
+  await fetch("/api/logou", { method: "POST", credentials: "include" });
+}
+
+export async function postUser(user: User) {
+  const res = await fetch("/api/users/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(user),
+  });
+
+  const body = await parseBody(res);
+
+  if (!res.ok) {
+    const msg =
+      (body && typeof body === "object" && (body as any).error) ||
+      (typeof body === "string" ? body : "") ||
+      res.statusText ||
+      "Request failed";
+
+    const err = Object.assign(new Error(msg), {
+      status: res.status,
+      data: body,
+      name: "ApiError",
+    });
+    throw err;
+  }
+
+  return body;
+}
+
+export async function loginUser(payload: {
+  user_email: string;
+  password: string;
+}) {
+  const res = await fetch("/api/users/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify(payload),
+  });
+
+  const body = await parseBody(res);
+
+  if (!res.ok) {
+    const msg =
+      (body && typeof body === "object" && (body as any).error) ||
+      (typeof body === "string" ? body : "") ||
+      res.statusText ||
+      "Request Failed";
+
+    const err = Object.assign(new Error(msg), {
+      status: res.status,
+      data: body,
+      name: "ApiError",
+    });
+    throw err;
+  }
+
+  return body;
 }
