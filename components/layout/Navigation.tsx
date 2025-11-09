@@ -1,13 +1,22 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "./AuthContext";
 
 function Navbar() {
+  const { user, loading, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
+
   return (
     <nav className="bg-white shadow-md p-4 fixed top-0 w-full z-100">
       <div className="max-w-4/5 mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold px-3 py-2 text-blue-600 mb-2 sm:mb-0">
           Book Notes
         </h1>
-        <ul className="flex w-md sm:justify-end gap-2 sm: gap-4 text-gray-700">
+        <ul className="flex w-md sm:justify-end gap-2 sm:gap-4 text-gray-700">
           <li className="p-2">
             <Link
               to="/Library"
@@ -26,7 +35,7 @@ function Navbar() {
           </li>
           <li className="p-2">
             <Link
-              to="/BookReview"
+              to="/UserReviews"
               className="hover:text-blue-600 transition cursor-pointer"
             >
               My Reviews
@@ -42,12 +51,18 @@ function Navbar() {
           </li>
         </ul>
         <div className="px-4 py-2 bg-blue shadow-md rounded rounded bg-blue-500 text-white">
-          <Link
-            to="/LogIn"
-            className="hover:text-blue-600 transition cursor-pointer"
-          >
-            LogIn
-          </Link>
+          {loading ? (
+            <span>...</span>
+          ) : user ? (
+            <button onClick={handleLogout}>Log Out</button>
+          ) : (
+            <Link
+              to="/LogIn"
+              className="hover:text-blue-600 transition cursor-pointer"
+            >
+              LogIn
+            </Link>
+          )}
         </div>
       </div>
     </nav>

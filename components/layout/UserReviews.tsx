@@ -1,21 +1,31 @@
 import { useState, useEffect } from "react";
 import ReviewCards from "./ReviewCards";
-import { getUserReviews } from "../../Routes/Api";
+import { getMyReviews } from "../../Routes/Api";
 
 function UserReviews() {
   const [userReviews, setUserReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchUserReviews() {
+    const ac = new AbortController();
+
+    (async () => {
       try {
-        const rData = await getUserReviews(1);
-        setUserReviews(rData);
+        const data = await getMyReviews();
+        setUserReviews(data.reviews || []);
       } catch (error) {
-        console.error("Could not fetct user Reviews:", error);
+        if (error) {
+          console.error("Could not fetch user Reviews:", error);
+        }
+      } finally {
+        setLoading(false);
       }
-    }
-    fetchUserReviews();
+    })();
+
+    return () => ac.abort();
   }, []);
+
+  if (loading) return null;
 
   return (
     <div className="flex flex-col w-5/6 max-w-[1400px] h-full m-auto px-4]">

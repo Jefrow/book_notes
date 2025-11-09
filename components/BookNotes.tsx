@@ -1,12 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-
-import { useState } from "react";
 import Navbar from "./layout/Navigation";
 import AddBook from "./layout/AddBooks";
 import LogIn from "./layout/LogInForm";
 import Register from "./layout/Register";
 import Library from "./layout/Library";
 import UserReviews from "./layout/UserReviews";
+import Protected from "./layout/Protected";
 
 function BookNotes() {
   return (
@@ -18,8 +17,22 @@ function BookNotes() {
             <Route path="/" element={<Library />} />
             <Route path="/Library" element={<Library />} />
             <Route path="" />
-            <Route path="/BookReview" element={<UserReviews />} />
-            <Route path="/AddBook" element={<AddBook />} />
+            <Route
+              path="/UserReviews"
+              element={
+                <Protected>
+                  <UserReviews />
+                </Protected>
+              }
+            />
+            <Route
+              path="/AddBook"
+              element={
+                <Protected>
+                  <AddBook />
+                </Protected>
+              }
+            />
             <Route path="/LogIn" element={<LogIn />} />
             <Route path="/Register" element={<Register />} />
           </Routes>

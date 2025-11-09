@@ -7,6 +7,7 @@ export type Book = {
 };
 
 export type User = {
+  user_id: number;
   user_email: string;
   password: string;
 };
@@ -46,3 +47,6 @@ export type BookCardsData = {
     author_name: string;
   };
 };
+
+export type PublicUser = Omit<User, "password">;
+export type NewUser = PublicUser | null;

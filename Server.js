@@ -36,14 +36,17 @@ app.use(express.json());
 
 app.use(
   session({
-    store: new PgSession({ pool }),
+    store: new PgSession({
+      pool,
+      createTableIfMissing: true,
+    }),
     secret: process.env.SESSION_SECRET || "dev-secret",
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: false,
       maxAge: 1000 * 60 * 60 * 8,
     },
   })
@@ -64,14 +67,20 @@ function requireAuth(req, res, next) {
 //"Mine" endpoints (use session user)
 app.get("/api/reviews/mine", requireAuth, async (req, res) => {
   const me = req.user;
-  const { rows } = await pool.query(
-    `SELECT book.book_title, book.book_cover_url, author.author_name, reviews.reviews_text review.reviews.rating
+  try {
+    const { rows } = await pool.query(
+      `SELECT book.book_title, book.book_cover_url, authors.author_name, reviews.review_text, reviews.rating
     FROM reviews
     JOIN book ON book.book_id = reviews.book_id
     Join authors ON authors.author_id = book.author_id
-    WHERE reviews.user_id = $1`[me.user_id]
-  );
-  res.json({ reviews: rows });
+    WHERE reviews.user_id = $1`,
+      [me.user_id]
+    );
+    res.json({ reviews: rows });
+  } catch (err) {
+    console.error("reviews/mine error:", err);
+    res.status(500).json({ error: "Internal Server Error." });
+  }
 });
 
 app.get("/api/books/mine", requireAuth, async (req, res) => {
@@ -80,7 +89,8 @@ app.get("/api/books/mine", requireAuth, async (req, res) => {
     `SELECT book.book_id, book.book_title, book.book_cover_url, authors.author_name,
     From book 
     JOIN authors ON authors.author_id = book.author_id
-    WHERE book.created_by = $1`[me.user_id]
+    WHERE book.created_by = $1`,
+    [me.user_id]
   );
   res.json({ books: rows });
 });
@@ -118,17 +128,22 @@ app.get("/api/users/:user_id/reviews", async (req, res) => {
   }
 });
 
-app.post("/api/books/full", async (req, res) => {
+app.post("/api/books/full", requireAuth, async (req, res) => {
+  const me = req.user;
   const client = await pool.connect();
   const {
     book_title,
     author_name,
     book_cover_url,
     book_summary,
-    user_id,
     review_text,
     rating,
   } = req.body;
+
+  if (!book_title || !author_name || !review_text) {
+    client.release();
+    return res.status(400).json({ error: "Missing required fields." });
+  }
 
   try {
     await client.query("BEGIN");
@@ -156,7 +171,7 @@ app.post("/api/books/full", async (req, res) => {
       `INSERT INTO reviews (user_id, book_id, review_text, rating)
       VALUES($1, $2, $3, $4)
       RETURNING *`,
-      [user_id, book_id, review_text, rating]
+      [me.user_id, book_id, review_text, rating]
     );
 
     await client.query("COMMIT");
@@ -199,9 +214,11 @@ app.post("/api/users/register", async (req, res) => {
       [email, hash]
     );
 
-    req.login(rows[0], (err) => {
-      if (err) return res.status(201).json({ user: rows[o] });
-      return res.status(201).json({ user: result.rows[0] });
+    const user = rows[0];
+
+    req.login(user, (err) => {
+      if (err) return res.status(201).json({ user });
+      return res.status(201).json({ user });
     });
   } catch (err) {
     if (err.code === "23505") {
@@ -216,56 +233,19 @@ app.post("/api/users/register", async (req, res) => {
 
 //server call to get the user when logging in.
 
-app.post("/api/users/login", passport.authenticate("local"), (req, res) => {
-  return res.status(200).json({ user: req.user });
-});
-
-app.post("/api/users/login", async (req, res) => {
-  try {
-    const email = String(req.body?.user_email ?? "")
-      .trim()
-      .toLowerCase();
-    let loginPassword = String(req.body?.password ?? "");
-
-    if (!email || !password) {
+app.post("/api/users/login", (req, res, next) => {
+  passport.authenticate("local", (err, user, info) => {
+    if (err) return next(err);
+    if (!user) {
       return res
-        .status(400)
-        .json({ error: "Email and password are required." });
+        .status(401)
+        .json({ error: info?.message || "Invalid email or password." });
     }
-
-    const result = await pool.query(
-      `SELECT user_id, user_email, password FROM users WHERE user_email = $1`,
-      [email]
-    );
-
-    if (result.rows.length > 0) {
-      const user = result.rows[0];
-      const storedHash = user.password;
-
-      bcrypt.compare(loginPassword, storedHash, (err, result) => {
-        if (err) {
-          return res.status(401).json({ error: "Invalid email or password." });
-          //do something,...In a regular ejs this would send "Error comparing password."
-        } else {
-          if (result) {
-            return res.status(200).json({
-              user: {
-                user_id: user.user_id,
-                user_email: user.user_email,
-              },
-            });
-          }
-        }
-      });
-    } else {
-      return res.status(401).json({ error: "User not found." });
-      //send "User not found."
-    }
-  } catch (error) {
-    console.error("Login error:", error);
-    return res.status(500).json({ error: "Internal server error." });
-    //send error to catch.
-  }
+    req.logIn(user, (err) => {
+      if (err) return next(err);
+      return res.status(200).json({ user });
+    });
+  })(req, res, next);
 });
 
 app.get("/api/me", (req, res) => {
@@ -280,38 +260,40 @@ app.post("/api/logout", (req, res) => {
 });
 
 passport.use(
-  new LocalStrategy(localFields, async (email, password, done) => {
-    try {
-      const normEmail = String(email ?? "")
-        .trim()
-        .toLowerCase();
-      if (!normEmail || !password) {
-        return done(null, false, {
-          message: "Email and password are required.",
+  new LocalStrategy(
+    { usernameField: "user_email", passwordField: "password" },
+    async (email, password, done) => {
+      try {
+        const normEmail = String(email || "")
+          .trim()
+          .toLowerCase();
+        if (!normEmail || !password) {
+          return done(null, false, {
+            message: "Email and password are required.",
+          });
+        }
+
+        const { rows } = await pool.query(
+          `SELECT user_id, user_email, password FROM  users WHERE  user_email = $1`,
+          [normEmail]
+        );
+        const user = rows[0];
+
+        const hash = user.password;
+
+        const ok = await bcrypt.compare(password, hash);
+        if (!user || !ok)
+          return done(null, false, { message: "Invalid email or password." });
+
+        return done(null, {
+          user_id: user.user_id,
+          user_email: user.user_email,
         });
+      } catch (err) {
+        return done(err);
       }
-
-      const { rows } = await pool.query(
-        `SELECT user_id, user_email, password
-      FROM users
-      WHERE user_email = $1`,
-        [normEmail]
-      );
-
-      const user = rows[0];
-
-      const hashToCheck = user?.passord;
-      const ok = await bcrypt.compare(password, hashToCheck);
-
-      if (!user || !ok) {
-        return done(null, false, { message: "Invalid email or password." });
-      }
-
-      return done(null, { user_id: user.user_id, user_email: user.user_email });
-    } catch (err) {
-      return done(err);
     }
-  })
+  )
 );
 
 passport.serializeUser((user, done) => {

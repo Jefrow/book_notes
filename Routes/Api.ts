@@ -1,4 +1,4 @@
-import type { BookData, User } from "../src/types";
+import type { BookData, NewUser, User } from "../src/types";
 import { parseBody } from "./helperFn";
 
 async function fetchBookData(title: string, author: string) {
@@ -89,22 +89,32 @@ export async function createBookData(bookData: BookData) {
   return res.json();
 }
 
+export async function getMyBooks() {}
+
 export async function getUserReviews(user_id: number) {
   const res = await fetch(`/api/users/${user_id}/reviews`);
   if (!res.ok) throw new Error("Failed to fetch book reviews");
   return res.json();
 }
 
-export async function fetchMe() {
-  const res = await fetch("/api/me", { credentials: "include" });
+export async function getMyReviews() {
+  const res = await fetch("/api/reviews/mine", { credentials: "include" });
+  if (!res.ok) throw new Error("Login required");
   return res.json();
 }
 
-export async function logout() {
-  await fetch("/api/logou", { method: "POST", credentials: "include" });
+export async function fetchMe(): Promise<{ user: NewUser }> {
+  const res = await fetch("/api/me", { credentials: "include" });
+  if (!res.ok) return { user: null };
+  const json = await res.json().catch(() => {});
+  return { user: json?.user ?? null };
 }
 
-export async function postUser(user: User) {
+export async function logoutRoute() {
+  await fetch("/api/logout", { method: "POST", credentials: "include" });
+}
+
+export async function postUser(user: Omit<User, "user_id">) {
   const res = await fetch("/api/users/register", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
