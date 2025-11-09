@@ -89,11 +89,9 @@ export async function createBookData(bookData: BookData) {
   return res.json();
 }
 
-export async function getMyBooks() {}
-
-export async function getUserReviews(user_id: number) {
-  const res = await fetch(`/api/users/${user_id}/reviews`);
-  if (!res.ok) throw new Error("Failed to fetch book reviews");
+export async function getMyBooks() {
+  const res = await fetch("/api/books/mine", { credentials: "include" });
+  if (!res.ok) throw new Error("Login required");
   return res.json();
 }
 
