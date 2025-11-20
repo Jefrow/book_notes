@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { postUser } from "../../Routes/Api";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "./AuthContext";
 
 function Register() {
   const navigate = useNavigate();
@@ -154,7 +154,9 @@ function Register() {
             type="button"
             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
             className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800 focus:outline-none"
-            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+            aria-label={
+              showConfirmPassword ? "Hide password" : "Show password"
+            }
           >
             {showConfirmPassword ? (
               <svg

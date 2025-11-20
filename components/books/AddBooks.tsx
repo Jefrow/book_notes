@@ -1,5 +1,5 @@
 import { useState } from "react";
-import StarRating from "./StarRating";
+import StarRating from "../ui/StarRating";
 import { toast } from "react-hot-toast";
 import { saveBookData } from "../../Routes/helperFn";
 

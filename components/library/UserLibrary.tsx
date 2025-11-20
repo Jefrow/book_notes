@@ -123,10 +123,7 @@ function UserLibrary() {
                 ? "You haven't favorited any books yet"
                 : activeFilter === "added"
                 ? "You haven't added any books to the library yet"
-                : `You don't have any books marked as "${activeFilter.replace(
-                    "_",
-                    " "
-                  )}"`}
+                : `You don't have any books marked as "${activeFilter.replace("_", " ")}"`}
             </p>
           </div>
         ) : (

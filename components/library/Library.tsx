@@ -1,4 +1,4 @@
-import BookCards from "./BookCards";
+import BookCards from "../books/BookCards";
 import { useEffect, useState } from "react";
 import { getBooks } from "../../Routes/Api";
 

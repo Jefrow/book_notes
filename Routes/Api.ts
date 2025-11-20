@@ -23,6 +23,32 @@ async function getWorksData(title: string, author: string) {
   return res.json();
 }
 
+export async function getISBN(title: string, author: string) {
+  try {
+    const data = await fetchBookData(title, author);
+
+    if (data.docs && data.docs.length > 0) {
+      const book = data?.docs?.[0];
+      if (!book) return null;
+
+      // Return the first ISBN-13 if available, otherwise ISBN-10
+      if (book.isbn?.length > 0) {
+        // Prefer ISBN-13 (13 digits)
+        const isbn13 = book.isbn.find((isbn: string) => isbn.length === 13);
+        if (isbn13) return isbn13;
+
+        // Fall back to first available ISBN
+        return book.isbn[0];
+      }
+    }
+
+    return null;
+  } catch (err) {
+    console.error("Error fetching ISBN: ", err);
+    return null;
+  }
+}
+
 export async function getCoverUrl(title: string, author: string) {
   try {
     const data = await fetchBookData(title, author);
@@ -89,7 +115,7 @@ export async function createBookData(bookData: BookData) {
   return res.json();
 }
 
-export async function getMyBooks() {
+export async function getUserBooks() {
   const res = await fetch("/api/books/mine", { credentials: "include" });
   if (!res.ok) throw new Error("Login required");
   return res.json();
@@ -169,4 +195,43 @@ export async function loginUser(payload: {
   }
 
   return body;
+}
+
+export async function getBookshelf() {
+  const res = await fetch("/api/bookshelf/mine", { credentials: "include" });
+  if (!res.ok) throw new Error("Login required");
+  const data = await res.json();
+  return data.books;
+}
+
+export async function toggleFavorite(book_id: number) {
+  const res = await fetch("/api/library/favorite", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ book_id }),
+  });
+  if (!res.ok) throw new Error("Failed to toggle favorite");
+  return res.json();
+}
+
+export async function updateReadStatus(
+  book_id: number,
+  read_status: string
+) {
+  const res = await fetch("/api/library/status", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ book_id, read_status }),
+  });
+  if (!res.ok) throw new Error("Failed to update read status");
+  return res.json();
+}
+
+export async function getBookReviews(book_id: number) {
+  const res = await fetch(`/api/books/${book_id}/reviews`);
+  if (!res.ok) throw new Error("Failed to fetch book reviews");
+  const data = await res.json();
+  return data;
 }

@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "../auth/AuthContext";
 
 function Navbar() {
   const { user, loading, logout } = useAuth();
@@ -27,7 +27,7 @@ function Navbar() {
           </li>
           <li className="p-2">
             <Link
-              to="/MyBooks"
+              to="/UserLibrary"
               className="hover:text-blue-600 transition cursor-pointer"
             >
               My Books

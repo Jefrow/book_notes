@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import type { User, NewUser } from "../../src/types";
+import type { NewUser } from "../../src/types";
 import { logoutRoute, fetchMe } from "../../Routes/Api";
 
 const AuthCtx = createContext<{

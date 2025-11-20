@@ -1,11 +1,13 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./layout/Navigation";
-import AddBook from "./layout/AddBooks";
-import LogIn from "./layout/LogInForm";
-import Register from "./layout/Register";
-import Library from "./layout/Library";
-import UserReviews from "./layout/UserReviews";
-import Protected from "./layout/Protected";
+import AddBook from "./books/AddBooks";
+import LogIn from "./auth/LogInForm";
+import Register from "./auth/Register";
+import Library from "./library/Library";
+import UserLibrary from "./library/UserLibrary";
+import UserReviews from "./reviews/UserReviews";
+import BookDetail from "./books/BookDetail";
+import Protected from "./auth/Protected";
 
 function BookNotes() {
   return (
@@ -16,7 +18,15 @@ function BookNotes() {
           <Routes>
             <Route path="/" element={<Library />} />
             <Route path="/Library" element={<Library />} />
-            <Route path="" />
+            <Route path="/books/:book_id" element={<BookDetail />} />
+            <Route
+              path="/UserLibrary"
+              element={
+                <Protected>
+                  <UserLibrary />
+                </Protected>
+              }
+            />
             <Route
               path="/UserReviews"
               element={

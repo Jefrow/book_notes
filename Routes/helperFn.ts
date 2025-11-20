@@ -1,22 +1,21 @@
-import { getCoverUrl, getBookSummary, createBookData } from "./Api";
-import type { BookFormData, BookData } from "../src/types";
+import { getCoverUrl, getBookSummary, getISBN, createBookData } from "./Api";
+import type { BookFormData } from "../src/types";
 
 export const fetchBookMetadata = async (title: string, author: string) => {
-  const [coverUrl, bookSummary] = await Promise.all([
+  const [coverUrl, bookSummary, isbn] = await Promise.all([
     getCoverUrl(title, author),
     getBookSummary(title, author),
+    getISBN(title, author),
   ]);
-  return { coverUrl, bookSummary };
+  return { coverUrl, bookSummary, isbn };
 };
 
 export const saveBookData = async (
   formData: BookFormData
-): Promise<{
-  newBookData: BookData;
-}> => {
+): Promise<any> => {
   const { titleInput, authorInput, reviewInput, ratingInput } = formData;
 
-  const { coverUrl, bookSummary } = await fetchBookMetadata(
+  const { coverUrl, bookSummary, isbn } = await fetchBookMetadata(
     titleInput,
     authorInput
   );
@@ -26,10 +25,11 @@ export const saveBookData = async (
     book_title: titleInput,
     book_cover_url: coverUrl ?? null,
     book_summary: bookSummary ?? null,
-    user_id: 1,
+    isbn: isbn ?? null,
+    data_source: isbn ? 'openlibrary' : 'user',
     review_text: reviewInput,
     rating: ratingInput,
-  });
+  } as any);
 
   return { newBookData };
 };
