@@ -7,12 +7,33 @@ import pgSessionFactory from "connect-pg-simple";
 import cors from "cors";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 const ROUNDS = Number(process.env.BCRYPT_COST ?? 12);
 const PgSession = pgSessionFactory(session);
+
+const REQUIRED_ENV = ["SESSION_SECRET", "DB_PASSWORD"];
+for (const key of REQUIRED_ENV) {
+  if (!process.env[key]) {
+    console.error(`Missing required environment variable: ${key}`);
+    process.exit(1);
+  }
+}
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: "Too many attempts, please try again later" },
+});
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const { Pool } = pg;
 
@@ -37,12 +58,17 @@ pool.connect((err, _client, release) => {
 
 app.set("trust proxy", 1);
 
+app.use(helmet());
+
+app.use("/api/users/login", authLimiter);
+app.use("/api/users/register", authLimiter);
+
 // CORS configuration from environment variables
 app.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true,
-  })
+  }),
 );
 app.use(express.json());
 
@@ -58,16 +84,14 @@ app.use(
     cookie: {
       httpOnly: true,
       sameSite: "lax",
-      secure: false,
+      secure: true,
       maxAge: 1000 * 60 * 60 * 8,
     },
-  })
+  }),
 );
 
 app.use(passport.initialize());
 app.use(passport.session());
-
-//get request that fetches the books from the book table.
 
 // Health check endpoint
 app.get("/health", (_req, res) => {
@@ -91,7 +115,7 @@ app.get("/api/reviews/mine", requireAuth, async (req, res) => {
     JOIN book ON book.book_id = reviews.book_id
     Join authors ON authors.author_id = book.author_id
     WHERE reviews.user_id = $1`,
-      [me.user_id]
+      [me.user_id],
     );
     res.json({ reviews: rows });
   } catch (err) {
@@ -108,7 +132,7 @@ app.get("/api/books/mine", requireAuth, async (req, res) => {
       From book
       JOIN authors ON authors.author_id = book.author_id
       WHERE book.added_by_user_id = $1`,
-      [me.user_id]
+      [me.user_id],
     );
     res.json({ books: rows });
   } catch (err) {
@@ -122,7 +146,7 @@ app.get("/api/books", async (req, res) => {
     const result = await pool.query(
       `SELECT book.book_id, book.book_title, book.book_cover_url, authors.author_name
       FROM book
-      INNER JOIN authors ON book.author_id = authors.author_id`
+      INNER JOIN authors ON book.author_id = authors.author_id`,
     );
     res.json(result.rows);
   } catch (error) {
@@ -144,7 +168,7 @@ app.get("/api/bookshelf/mine", requireAuth, async (req, res) => {
        LEFT JOIN user_library ON user_library.book_id = book.book_id AND user_library.user_id = $1
        WHERE book.added_by_user_id = $1 OR user_library.user_id = $1
        ORDER BY user_library.added_to_shelf_at DESC NULLS LAST, book.created_at DESC`,
-      [me.user_id]
+      [me.user_id],
     );
     res.json({ books: rows });
   } catch (err) {
@@ -167,7 +191,7 @@ app.post("/api/library/favorite", requireAuth, async (req, res) => {
        VALUES ($1, $2, true)
        ON CONFLICT (user_id, book_id) 
        DO UPDATE SET is_favorite = NOT user_library.is_favorite`,
-      [me.user_id, book_id]
+      [me.user_id, book_id],
     );
     res.json({ success: true });
   } catch (err) {
@@ -194,7 +218,7 @@ app.post("/api/library/status", requireAuth, async (req, res) => {
       VALUES ($1, $2, $3)
       ON CONFLICT (user_id, book_id)
       DO UPDATE SET read_status = $3`,
-      [me.user_id, book_id, read_status]
+      [me.user_id, book_id, read_status],
     );
     res.json({ success: true });
   } catch (err) {
@@ -212,7 +236,7 @@ app.get("/api/books/:book_id/reviews", async (req, res) => {
        FROM book
        JOIN authors ON authors.author_id = book.author_id
        WHERE book.book_id = $1`,
-      [book_id]
+      [book_id],
     );
 
     if (bookResult.rows.length === 0) {
@@ -226,12 +250,12 @@ app.get("/api/books/:book_id/reviews", async (req, res) => {
        JOIN users ON users.user_id = reviews.user_id
        WHERE reviews.book_id = $1
        ORDER BY reviews.created_at DESC`,
-      [book_id]
+      [book_id],
     );
 
     res.json({
       book: bookResult.rows[0],
-      reviews: reviewsResult.rows
+      reviews: reviewsResult.rows,
     });
   } catch (err) {
     console.error("book reviews error:", err);
@@ -265,7 +289,7 @@ app.post("/api/books/full", requireAuth, async (req, res) => {
     if (isbn) {
       const isbnCheck = await client.query(
         `SELECT book_id FROM book WHERE isbn = $1`,
-        [isbn]
+        [isbn],
       );
       if (isbnCheck.rows.length > 0) {
         const existingBookId = isbnCheck.rows[0].book_id;
@@ -273,7 +297,7 @@ app.post("/api/books/full", requireAuth, async (req, res) => {
         // Check if user already reviewed this book
         const reviewCheck = await client.query(
           `SELECT review_id FROM reviews WHERE user_id = $1 AND book_id = $2`,
-          [me.user_id, existingBookId]
+          [me.user_id, existingBookId],
         );
 
         if (reviewCheck.rows.length > 0) {
@@ -281,7 +305,7 @@ app.post("/api/books/full", requireAuth, async (req, res) => {
           client.release();
           return res.status(409).json({
             error: "You have already reviewed this book.",
-            book_id: existingBookId
+            book_id: existingBookId,
           });
         }
 
@@ -290,7 +314,7 @@ app.post("/api/books/full", requireAuth, async (req, res) => {
           `INSERT INTO reviews (user_id, book_id, review_text, rating)
           VALUES($1, $2, $3, $4)
           RETURNING *`,
-          [me.user_id, existingBookId, review_text, rating]
+          [me.user_id, existingBookId, review_text, rating],
         );
 
         await client.query("COMMIT");
@@ -298,7 +322,7 @@ app.post("/api/books/full", requireAuth, async (req, res) => {
         return res.status(201).json({
           book: { book_id: existingBookId },
           review: reviewResult.rows[0],
-          message: "Review added to existing book"
+          message: "Review added to existing book",
         });
       }
     }
@@ -308,7 +332,7 @@ app.post("/api/books/full", requireAuth, async (req, res) => {
       VALUES ($1)
       ON CONFLICT (author_name) DO UPDATE SET author_name = EXCLUDED.author_name
       RETURNING author_id`,
-      [author_name]
+      [author_name],
     );
 
     const author_id = authorResult.rows[0].author_id;
@@ -324,16 +348,16 @@ app.post("/api/books/full", requireAuth, async (req, res) => {
         book_cover_url ?? null,
         book_summary ?? null,
         isbn ?? null,
-        data_source ?? 'user',
+        data_source ?? "user",
         me.user_id,
-      ]
+      ],
     );
 
     let book_id;
     if (bookResult.rows.length === 0) {
       const existing = await client.query(
         `SELECT book_id FROM book WHERE book_title = $1 AND author_id = $2`,
-        [book_title, author_id]
+        [book_title, author_id],
       );
       book_id = existing.rows[0].book_id;
     } else {
@@ -344,7 +368,7 @@ app.post("/api/books/full", requireAuth, async (req, res) => {
       `INSERT INTO reviews (user_id, book_id, review_text, rating)
       VALUES($1, $2, $3, $4)
       RETURNING *`,
-      [me.user_id, book_id, review_text, rating]
+      [me.user_id, book_id, review_text, rating],
     );
 
     await client.query("COMMIT");
@@ -384,7 +408,7 @@ app.post("/api/users/register", async (req, res) => {
     const hash = await bcrypt.hash(password, ROUNDS);
     const { rows } = await pool.query(
       "INSERT INTO users (user_email, password) VALUES ($1, $2) RETURNING *",
-      [email, hash]
+      [email, hash],
     );
 
     const user = rows[0];
@@ -448,7 +472,7 @@ passport.use(
 
         const { rows } = await pool.query(
           `SELECT user_id, user_email, password FROM  users WHERE  user_email = $1`,
-          [normEmail]
+          [normEmail],
         );
         const user = rows[0];
         if (!user) {
@@ -470,8 +494,8 @@ passport.use(
       } catch (err) {
         return done(err);
       }
-    }
-  )
+    },
+  ),
 );
 
 passport.serializeUser((user, done) => {
@@ -482,13 +506,18 @@ passport.deserializeUser(async (id, done) => {
   try {
     const { rows } = await pool.query(
       `SELECT user_id, user_email FROM users WHERE user_id = $1`,
-      [id]
+      [id],
     );
     const user = rows[0] ?? null;
     done(null, user);
   } catch (err) {
     done(err);
   }
+});
+
+app.use(express.static(path.join(__dirname, "dist")));
+app.get("*", (_req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
 
 app.listen(port, () => {
