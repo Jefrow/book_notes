@@ -109,6 +109,7 @@ export async function createBookData(bookData: BookData) {
   const res = await fetch("/api/books/full", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify(bookData),
   });
   if (!res.ok) throw new Error("Failed to create new book data.");
