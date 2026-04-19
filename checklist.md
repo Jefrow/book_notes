@@ -2,19 +2,20 @@
 
 ## Critical (must fix before going live)
 
-- [ ] **HTTPS/TLS** — Set up a certificate. Without it, session cookies are sent in plain text
-- [ ] **Fix `SESSION_SECRET`** — Change from `"dev-secret"` default. Generate with: `openssl rand -base64 32`
-- [ ] **Set `secure: true` on session cookie** — Currently hardcoded `false`. Requires HTTPS
-- [ ] **Set `NODE_ENV=production`** — Many libraries behave differently without this
-- [ ] **Configure `FRONTEND_URL`** to your production domain (currently defaults to localhost)
+- [x] **Set `secure: true` on session cookie** — Fixed, requires HTTPS
+- [x] **Add startup validation** — Crashes early if `SESSION_SECRET` or `DB_PASSWORD` are missing
+- [ ] **HTTPS/TLS** — Handled by Azure App Service (built-in SSL on `*.azurewebsites.net`)
+- [ ] **Fix `SESSION_SECRET`** — Will be set as an Azure App Service Application Setting (never commit to repo). Generate with: `openssl rand -base64 32`
+- [ ] **Set `NODE_ENV=production`** — Will be set in Azure App Service Application Settings
+- [ ] **Configure `FRONTEND_URL`** — Will be set to Azure domain in App Service Application Settings
 
 ---
 
 ## Security
 
-- [ ] Install & configure **`helmet`** for security headers (CSP, HSTS, X-Frame-Options, etc.)
-- [ ] Add **rate limiting** (`express-rate-limit`) on `/api/users/login` and `/api/users/register`
-- [ ] Restrict **CORS** to your production domain only (currently allows all origins)
+- [x] Install & configure **`helmet`** — Wired up before all other middleware
+- [x] Add **rate limiting** (`express-rate-limit`) — Applied to `/api/users/login` and `/api/users/register` (10 req / 15 min)
+- [ ] Restrict **CORS** to your production domain only — Set `FRONTEND_URL` to Azure domain when provisioned
 - [ ] Run `npm audit` and fix high/critical vulnerabilities
 - [ ] Remove or guard all `console.log` calls from production
 - [ ] Add **account lockout** after repeated failed login attempts
@@ -23,37 +24,39 @@
 
 ## Environment & Config
 
-- [ ] Create a `.env.production` with all required variables set:
+- [x] **Startup validation** — Crashes early if `SESSION_SECRET` or `DB_PASSWORD` are missing
+- [ ] Set all required variables in **Azure App Service → Application Settings**:
   - `DB_PASSWORD`, `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PORT`
-  - `SESSION_SECRET`, `PORT`, `FRONTEND_URL`
-- [ ] Add **startup validation** that crashes early if required env vars are missing (instead of silently using bad defaults)
+  - `SESSION_SECRET`, `PORT`, `FRONTEND_URL`, `NODE_ENV`
 
 ---
 
 ## Database
 
+- [ ] Provision **Azure Database for PostgreSQL – Flexible Server** (B1ms tier)
 - [ ] Run all migrations on the production database
-- [ ] Confirm `DB_PASSWORD` is set — it has no fallback and will fail silently
-- [ ] Set up **automated backups**
+- [ ] Automated backups — built into Azure PostgreSQL Flexible Server
 - [ ] Verify indexes exist on `isbn`, `book_title+author`
 
 ---
 
 ## Frontend Build
 
+- [x] **Express serves `dist/`** — `express.static` + `app.get("*")` catch-all added to `Server.js`
 - [ ] Run `npm run build` without errors
 - [ ] Test production build locally with `npm run preview`
-- [ ] Verify all `fetch` calls include `credentials: "include"` (the `Routes/Api.ts` change you have staged fixes one — audit the rest)
+- [ ] Verify all `fetch` calls include `credentials: "include"`
 - [ ] Remove any dev-only code or debug flags
 
 ---
 
-## Deployment Infrastructure (currently nothing exists)
+## Deployment Infrastructure
 
-- [ ] Write a **`Dockerfile`** (or configure for your target platform — Railway, Render, Fly.io, etc.)
-- [ ] Decide on a **static file serving strategy** — serve `dist/` from Express, or deploy frontend to a CDN separately
+- [x] **Static file serving** — `dist/` served from Express, frontend + backend on same App Service
+- [ ] Provision **Azure App Service** (F1 free tier, Node.js, Linux)
+- [ ] Set App Service startup command to `node Server.js`
 - [ ] Fix the missing `dev:all` script referenced in the README
-- [ ] Set up a **CI/CD pipeline** (GitHub Actions is the simplest given your existing Git setup)
+- [ ] Set up a **CI/CD pipeline** (GitHub Actions)
 
 ---
 
@@ -62,7 +65,7 @@
 - [ ] Add **request logging** middleware (morgan or pino-http)
 - [ ] Add **structured error logging** — `console.error` won't survive log aggregation
 - [ ] Set up **error tracking** (Sentry free tier works well for this scale)
-- [ ] Add a meaningful `/health` endpoint that checks DB connectivity
+- [ ] Improve `/health` endpoint to check DB connectivity
 
 ---
 
@@ -76,6 +79,4 @@
 
 ---
 
-**Highest-risk items in priority order:** HTTPS → SESSION_SECRET → helmet → rate limiting → env validation → deployment config.
-
-The data layer is solid (parameterized queries, transactions, constraints). The main gaps are all in infrastructure and security hardening.
+**Progress: Phase 1 complete. Currently on Phase 2 — Azure resource provisioning.**
