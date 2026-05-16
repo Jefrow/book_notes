@@ -27,25 +27,26 @@
 
 ### Phase 1 — Code changes ✅ COMPLETE
 
-| # | Task | Status |
-|---|------|--------|
-| 1 | Set `secure: true` on session cookie | ✅ Done |
-| 2 | Add env var validation (crash early if missing) | ✅ Done |
-| 3 | Install and wire up `helmet` | ✅ Done |
-| 4 | Add rate limiting on login + register routes | ✅ Done |
-| 5 | Serve `dist/` from Express with catch-all | ✅ Done |
+| #   | Task                                            | Status  |
+| --- | ----------------------------------------------- | ------- |
+| 1   | Set `secure: true` on session cookie            | ✅ Done |
+| 2   | Add env var validation (crash early if missing) | ✅ Done |
+| 3   | Install and wire up `helmet`                    | ✅ Done |
+| 4   | Add rate limiting on login + register routes    | ✅ Done |
+| 5   | Serve `dist/` from Express with catch-all       | ✅ Done |
 
 ---
 
 ### Phase 2 — Azure resources (current phase)
 
-| # | Task | Status |
-|---|------|--------|
-| 6 | Create Azure account + install Azure CLI | ⬜ Todo |
-| 7 | Provision Azure Database for PostgreSQL – Flexible Server (B1ms) | ⬜ Todo |
-| 8 | Provision Azure App Service (F1, Node.js, Linux) | ⬜ Todo |
+| #   | Task                                                             | Status  |
+| --- | ---------------------------------------------------------------- | ------- |
+| 6   | Create Azure account + install Azure CLI                         | ⬜ Todo |
+| 7   | Provision Azure Database for PostgreSQL – Flexible Server (B1ms) | ⬜ Todo |
+| 8   | Provision Azure App Service (F1, Node.js, Linux)                 | ⬜ Todo |
 
 **CLI commands (Step 6):**
+
 ```bash
 # Install Azure CLI
 brew install azure-cli
@@ -61,12 +62,13 @@ az account show
 
 ### Phase 3 — Configuration
 
-| # | Task | Status |
-|---|------|--------|
-| 9 | Set all env vars in App Service → Application Settings | ⬜ Todo |
-| 10 | Set App Service startup command to `node Server.js` | ⬜ Todo |
+| #   | Task                                                   | Status  |
+| --- | ------------------------------------------------------ | ------- |
+| 9   | Set all env vars in App Service → Application Settings | ⬜ Todo |
+| 10  | Set App Service startup command to `node Server.js`    | ⬜ Todo |
 
 **Required Application Settings:**
+
 ```
 NODE_ENV=production
 SESSION_SECRET=<generated with: openssl rand -base64 32>
@@ -83,16 +85,16 @@ PORT=8080
 
 ### Phase 4 — Build & Deploy
 
-| # | Task | Status |
-|---|------|--------|
-| 11 | Build the frontend (`npm run build`) | ⬜ Todo |
-| 12 | Deploy to App Service via Azure CLI or GitHub Actions | ⬜ Todo |
+| #   | Task                                                  | Status  |
+| --- | ----------------------------------------------------- | ------- |
+| 11  | Build the frontend (`npm run build`)                  | ⬜ Todo |
+| 12  | Deploy to App Service via Azure CLI or GitHub Actions | ⬜ Todo |
 
 ---
 
 ### Phase 5 — Verify
 
-| # | Task | Status |
-|---|------|--------|
-| 13 | Run migrations against Azure PostgreSQL | ⬜ Todo |
-| 14 | Smoke test all routes — auth, books, library, reviews | ⬜ Todo |
+| #   | Task                                                  | Status  |
+| --- | ----------------------------------------------------- | ------- |
+| 13  | Run migrations against Azure PostgreSQL               | ⬜ Todo |
+| 14  | Smoke test all routes — auth, books, library, reviews | ⬜ Todo |

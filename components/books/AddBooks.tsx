@@ -14,6 +14,11 @@ function AddBook() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (formData.ratingInput === 0) {
+      toast.error("Please select a rating");
+      return;
+    }
+
     try {
       await saveBookData(formData);
 
@@ -32,7 +37,7 @@ function AddBook() {
   };
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));

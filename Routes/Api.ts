@@ -3,7 +3,7 @@ import { parseBody } from "./helperFn";
 
 async function fetchBookData(title: string, author: string) {
   const bookSearch = `https://openlibrary.org/search.json?title=${encodeURIComponent(
-    title
+    title,
   )}&author=${encodeURIComponent(author)}`;
 
   const res = await fetch(bookSearch);
@@ -112,7 +112,10 @@ export async function createBookData(bookData: BookData) {
     credentials: "include",
     body: JSON.stringify(bookData),
   });
-  if (!res.ok) throw new Error("Failed to create new book data.");
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(`${res.status} - ${body?.error ?? "unknown"}`);
+  }
   return res.json();
 }
 
@@ -124,7 +127,10 @@ export async function getUserBooks() {
 
 export async function getMyReviews() {
   const res = await fetch("/api/reviews/mine", { credentials: "include" });
-  if (!res.ok) throw new Error("Login required");
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(`${res.status} - ${body?.error ?? "unknown"}`);
+  }
   return res.json();
 }
 
@@ -216,10 +222,7 @@ export async function toggleFavorite(book_id: number) {
   return res.json();
 }
 
-export async function updateReadStatus(
-  book_id: number,
-  read_status: string
-) {
+export async function updateReadStatus(book_id: number, read_status: string) {
   const res = await fetch("/api/library/status", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
